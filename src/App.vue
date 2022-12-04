@@ -1,11 +1,15 @@
 <script setup lang="ts">
 import NavbarVue from "./components/Navbar.vue";
 import { RouterView } from "vue-router";
+import { useAppStore } from "./stores/app";
+
+const appStore = useAppStore()
+
 
 </script>
 
 <template>
-  <v-app>
+  <v-app v-if="!appStore.isFullScreen">
     <v-app-bar title="Web Admin" />
     <NavbarVue />
     <v-main>
@@ -14,6 +18,9 @@ import { RouterView } from "vue-router";
       </div>
     </v-main>
   </v-app>
+  <div class="full-screen" v-else>
+    <RouterView />
+  </div>
 </template>
 
 <style scoped>
@@ -77,5 +84,8 @@ nav a:first-of-type {
     padding: 1rem 0;
     margin-top: 1rem;
   }
+}
+.full-screen {
+  width: 100vw;
 }
 </style>
