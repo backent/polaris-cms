@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import Form from '@/components/product/Form.vue';
+
 </script>
 
 <template>
@@ -7,7 +9,10 @@
       <v-col>
         <v-card>
           <v-card-title>
-            Products
+            <div class="d-flex justify-space-between">
+              Products
+              <Form />
+            </div>
           </v-card-title>
           <v-card-text>
             <v-table>
