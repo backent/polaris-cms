@@ -32,9 +32,12 @@ watch(form, validatingForm, { deep: true })
 
 <template>
   <v-btn color="primary">
-    Open Dialog
+    Add New
     <v-dialog v-model="dialog" activator="parent" max-width="800">
       <v-card>
+        <v-card-title>
+          Form
+        </v-card-title>
         <v-card-text>
           <v-form ref="formProduct">
             <v-container>

@@ -19,7 +19,7 @@ a,
   position: sticky;
   bottom: 5px;
   left: 0;
-  background-color: rgba(240, 255, 255, .6);
+  background-color: rgba(224, 224, 224, .6);
 }
 
 @media (hover: hover) {
