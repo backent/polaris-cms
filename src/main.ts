@@ -10,6 +10,8 @@ import '@mdi/font/css/materialdesignicons.css'
 
 import vuetify from './plugins/vuetify'
 import filters from './plugins/filters'
+import http from './plugins/http'
+import apis from './plugins/apis'
 
 import "./assets/main.css";
 
@@ -19,5 +21,7 @@ app.use(createPinia());
 app.use(router);
 app.use(vuetify);
 app.use(filters);
+app.use(http);
+app.use(apis);
 
 app.mount("#app");
