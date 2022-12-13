@@ -1,9 +1,19 @@
 <script setup lang="ts">
 import router from '@/router';
+import { inject } from 'vue';
+import type { AxiosInstance } from 'axios'
+const http: AxiosInstance | undefined = inject('http')
 
 
-function login() {
-  router.push({ name: 'home' })
+async function login() {
+  console.log(http)
+  return http?.post('login', {})
+    .then(() => {
+      router.push({ name: 'home' })
+    })
+    .catch(err => {
+      throw err
+    })
 }
 
 </script>
