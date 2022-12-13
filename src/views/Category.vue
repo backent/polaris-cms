@@ -1,15 +1,17 @@
 <script setup lang="ts">
-import Form from '@/components/category/Form.vue'
 import DataTable from '@/components/DataTable.vue';
 import type { HttpAPI } from '@/types/api';
 import { computed } from '@vue/reactivity';
-import { inject, onMounted, ref } from 'vue';
+import { inject, onMounted, ref, defineAsyncComponent } from 'vue';
+const Form = defineAsyncComponent(() => import('@/components/category/Form.vue'))
+const DeleteDialog = defineAsyncComponent(() => import('@/components/category/Delete.vue'))
+
 const categoriesAPI: HttpAPI | undefined = inject('categoriesAPI')
 
 const categories = ref([])
 const headers = computed(() => {
   return [
-    { text: 'id', value: 'id' },
+    { text: 'No', value: 'no' },
     { text: 'Name', value: 'name' },
     { text: 'Slug', value: 'slug' },
     { text: 'Actions', value: 'action' },
@@ -42,12 +44,13 @@ onMounted(() => {
           </v-card-title>
           <v-card-text>
             <DataTable :headers="headers" :items="categories">
+              <template #no="{ item }">
+                {{ categories.findIndex((category: any) => category.id === item.id)! + 1 }}
+              </template>
               <template #action="{ item }">
                 <div class="action">
                   <Form mode="edit" :id="item.id" icon="mdi-pencil" color-button="orange" @close="mounted()" />
-                  <v-btn variant="text" size="x-small" color="red">
-                    <v-icon icon="mdi-trash-can-outline" />
-                  </v-btn>
+                  <DeleteDialog :id="item.id" @close="mounted()"/>
                 </div>
               </template>
             </DataTable>

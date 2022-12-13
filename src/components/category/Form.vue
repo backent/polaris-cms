@@ -66,7 +66,7 @@ const rules = ref({
   ]
 })
 let types =  reactive<Array<TypeProduct>>([])
-const formProduct = ref<null | { validate: () => null }>(null)
+const formProduct = ref<null | { validate: () => boolean }>(null)
 
 function close() {
   resetForm()
@@ -86,6 +86,9 @@ function validatingForm() {
 }
 
 async function submit() {
+  if (!(formProduct.value?.validate() ?? false)) {
+    return
+  }
   let response: Promise<any> | undefined
   if (props.mode === 'create') {
     response = categoriesAPI?.post(form.value)
