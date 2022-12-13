@@ -69,6 +69,10 @@ const paginationLength = computed(() => {
   .pagination {
     align-self: flex-end;
   }
+
+  tbody > tr:hover {
+    background-color: lighten(rgb(98, 0, 238), 50%);
+  }
 }
 
 </style>
