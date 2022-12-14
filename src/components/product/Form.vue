@@ -1,33 +1,111 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue';
+import { inject, onMounted, ref, watch, computed, nextTick, watchEffect, reactive} from 'vue';
+import type { HttpAPI } from "@/types/api"
+
+
+type buttonProps = {
+  variant: "flat" | "text" | "elevated" | "tonal" | "outlined" | "plain" | undefined,
+  icon: string | undefined,
+  size: string | undefined,
+  color: string | undefined
+}
 
 type Product = {
   id?: number,
   name: string,
-  files: Array<string | File>,
+  slug?: string,
   category_id: number | null,
+
+  id_description: string,
+  en_description: string,
+  features: string,
+
+  dimension_width: number,
+  dimension_length: number,
+  dimension_height: number,
+  
+  seat_width: number,
+  seat_length: number,
+  seat_height: number,
+
+  files: Array<File>,
+
   created_at?: Date,
   updated_at?: Date
 }
+
+const emits = defineEmits(['close'])
+const props = defineProps({
+  mode: {
+    type: String,
+    default: 'create'
+  },
+  icon: {
+    type: String,
+    default: 'mdi-pencil'
+  },
+  colorButton: {
+    type: String,
+    default: 'orange'
+  },
+  id: {
+    type: Number,
+    default: 0
+  }
+})
+
 const dialog = ref(false)
+const file = ref<null | { click: () => null }>(null)
 const form = ref<Product>({
   name: '',
   category_id: null,
+  id_description: '',
+  en_description: '',
+  features: '',
+  dimension_height: 0,
+  dimension_length: 0,
+  seat_width: 0,
+  seat_height: 0,
+  seat_length: 0,
+  dimension_width: 0,
   files: []
 })
-const rules = ref({
-  name: [
-    (v: string) => !!v || 'Name is required!'
-  ],
-  category: [
-    (v: number) => (!!v && v > 0) || 'Category is required!'
-  ]
-})
-const formProduct = ref<null | { validate: () => null }>(null)
-const file = ref<null | { click: () => null }>(null)
+
+function close() {
+  resetForm()
+  emits('close')
+  dialog.value = false
+}
+
+function resetForm() {
+  // reset form
+}
 
 function validatingForm() {
-  formProduct.value?.validate()
+  // validating form
+}
+
+async function submit() {
+}
+
+watch(form, validatingForm, { deep: true })
+const buttonProps = computed((): buttonProps => {
+  const buttonCreateProps: buttonProps = {
+    variant: undefined,
+    icon: undefined,
+    size: undefined,
+    color: 'primary'
+  }
+  const buttonEditProps: buttonProps = {
+    variant: 'plain',
+    icon: props.icon,
+    size: 'x-small',
+    color: props.colorButton
+  }
+  return props.mode === 'create' ? buttonCreateProps : buttonEditProps
+})
+
+async function onBtnClick() {
 }
 
 function clickFile() {
@@ -47,12 +125,24 @@ function deleteFile(indexFile: number) {
   }
 }
 
-watch(form, validatingForm, { deep: true })
+function isNumber (evt: KeyboardEvent): void {
+  const keysAllowed: string[] = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.'];
+  const keyPressed: string = evt.key;
+  
+  if (!keysAllowed.includes(keyPressed)) {
+          evt.preventDefault()
+  }
+}
 </script>
 
 <template>
-  <v-btn color="primary">
-    Add New
+  <v-btn
+    :variant="buttonProps.variant"
+    :size="buttonProps.size"
+    :color="buttonProps.color"
+    @click="onBtnClick"
+  >
+    {{ mode === 'create' ? 'Add New' : '' }} <v-icon v-if="mode !== 'create'" :icon="buttonProps.icon" />
     <v-dialog v-model="dialog" activator="parent" max-width="800">
       <v-card>
         <v-card-title>
@@ -62,20 +152,13 @@ watch(form, validatingForm, { deep: true })
           <v-form ref="formProduct">
             <v-container>
               <v-row>
+                <v-col md="12"><h3>Details</h3></v-col>
                 <v-col
                   md="6"
                 >
                   <v-text-field
                     v-model="form.name"
-                    :rules="rules.name"
                     label="Product Name"
-                  />
-                </v-col>
-                <v-col
-                  md="6"
-                >
-                  <v-text-field
-                    label="Group"
                   />
                 </v-col>
                 <v-col
@@ -83,73 +166,45 @@ watch(form, validatingForm, { deep: true })
                 >
                   <v-autocomplete
                     v-model="form.category_id"
-                    :rules="rules.category"
                     label="Category"
                   />
                 </v-col>
-                <v-col
-                  md="12"
-                >
-                  <label for="lang">Description</label>
-                  <v-switch
-                    id="lang"
-                    label="Indonesia"
-                    color="red"
-                    value="red"
-                    hide-details
-                  />
-                  <v-textarea
-                    placeholder="Put your description here ..."
-                    counter
-                  >
-
-                  </v-textarea>
+              </v-row>
+              <v-row>
+                <v-col md="12">
+                  <v-textarea v-model="form.en_description" label="Description (English)" counter />
+                </v-col>
+                <v-col md="12">
+                  <v-textarea v-model="form.id_description" label="Description (Bahasa)" counter />
                 </v-col>
               </v-row>
               <v-row>
-                <v-col
-                  md="6"
-                >
-                  <h4>Dimensions</h4>
-                  <v-row>
-                    <v-col md="12">
-                      <v-text-field
-                        label="Width"
-                      />
-                    </v-col>
-                    <v-col md="12">
-                      <v-text-field
-                        label="Length"
-                      />
-                    </v-col>
-                    <v-col md="12">
-                      <v-text-field
-                        label="Height"
-                      />
-                    </v-col>
-                  </v-row>
+                <v-col md="12">
+                  <v-textarea v-model="form.features" label="Features" counter />
                 </v-col>
-                <v-col
-                  md="6"
-                >
-                  <h4>Seat</h4>
-                  <v-row>
-                    <v-col md="12">
-                      <v-text-field
-                        label="Width"
-                      />
-                    </v-col>
-                    <v-col md="12">
-                      <v-text-field
-                        label="Length"
-                      />
-                    </v-col>
-                    <v-col md="12">
-                      <v-text-field
-                        label="Height"
-                      />
-                    </v-col>
-                  </v-row>
+              </v-row>
+              <v-row>
+                <v-col md="12"><h3>Dimension</h3></v-col>
+                <v-col md="4">
+                  <v-text-field v-model.number="form.dimension_width" @keypress="isNumber" label="Width" />
+                </v-col>
+                <v-col md="4">
+                  <v-text-field v-model.number="form.dimension_length"  @keypress="isNumber" label="Length" />
+                </v-col>
+                <v-col md="4">
+                  <v-text-field v-model.number="form.dimension_height"  @keypress="isNumber" label="Height" />
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-col md="12"><h3>Seat</h3></v-col>
+                <v-col md="4">
+                  <v-text-field v-model.number="form.seat_width"  @keypress="isNumber" label="Width" />
+                </v-col>
+                <v-col md="4">
+                  <v-text-field v-model.number="form.seat_length"  @keypress="isNumber" label="Length" />
+                </v-col>
+                <v-col md="4">
+                  <v-text-field v-model.number="form.seat_height"  @keypress="isNumber" label="Height" />
                 </v-col>
               </v-row>
               <v-row>
@@ -178,8 +233,8 @@ watch(form, validatingForm, { deep: true })
           class="footer-form"
         >
           <v-spacer />
-          <v-btn color="primary" @click="dialog = false">Save</v-btn>
-          <v-btn color="orange" @click="dialog = false">Close</v-btn>
+          <v-btn color="primary" @click="submit">Save</v-btn>
+          <v-btn color="orange" @click="close">Close</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
