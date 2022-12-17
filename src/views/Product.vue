@@ -4,6 +4,7 @@ import type { HttpAPI } from '@/types/api';
 import { computed } from '@vue/reactivity';
 import { inject, onMounted, ref, defineAsyncComponent } from 'vue';
 const Form = defineAsyncComponent(() => import('@/components/product/Form.vue'))
+const DeleteDialog = defineAsyncComponent(() => import('@/components/product/Delete.vue'))
 
 const productsAPI: HttpAPI | undefined = inject('productsAPI')
 
@@ -45,6 +46,12 @@ onMounted(() => {
             <DataTable :headers="headers" :items="products">
               <template #no="{ item }">
                 {{ products.findIndex((product: any) => product.id === item.id)! + 1 }}
+              </template>
+              <template #action="{ item }">
+                <div class="action">
+                  <Form mode="edit" :id="item.id" icon="mdi-pencil" color-button="orange" @close="mounted()" />
+                  <DeleteDialog :id="item.id" @close="mounted()"/>
+                </div>
               </template>
             </DataTable>
           </v-card-text>

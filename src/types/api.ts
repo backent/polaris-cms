@@ -1,6 +1,6 @@
 type Id = number | string
 
-export type HttpAPI {
+export type HttpAPI = {
   get(): Promise<any>,
   show(id: Id): Promise<any>,
   post(data: object): Promise<any>,

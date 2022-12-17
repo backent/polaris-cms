@@ -49,10 +49,11 @@ const props = defineProps({
 })
 
 const dialog = ref(false)
-const form = ref<Category>({
+const base = {
   name: '',
   type_id: null,
-})
+}
+const form = ref<Category>({ ...base })
 const selectedType = ref<TypeProduct | undefined>({
   id: 0,
   name: ''
@@ -66,27 +67,24 @@ const rules = ref({
   ]
 })
 let types =  reactive<Array<TypeProduct>>([])
-const formProduct = ref<null | { validate: () => boolean }>(null)
+const formProduct = ref<null | { validate: () => { valid: boolean } }>(null)
 
+function initForm() {
+  form.value = { ...base }
+}
+  
 function close() {
-  resetForm()
   emits('close')
   dialog.value = false
 }
 
-function resetForm() {
-  form.value = {
-    name: '',
-    type_id: null
-  }
-}
-
 function validatingForm() {
-  formProduct.value?.validate()
+  return formProduct.value?.validate()
 }
 
 async function submit() {
-  if (!(formProduct.value?.validate() ?? false)) {
+  const isValidate = await validatingForm()
+  if (!isValidate?.valid ?? false) {
     return
   }
   let response: Promise<any> | undefined
@@ -124,6 +122,7 @@ const buttonProps = computed((): buttonProps => {
 })
 
 async function onBtnClick() {
+  initForm()
   await nextTick()
   if (props.mode === 'edit') {
     categoriesAPI?.show(props.id)

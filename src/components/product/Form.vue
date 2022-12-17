@@ -2,6 +2,9 @@
 import { inject, onMounted, ref, watch, computed, nextTick, watchEffect, reactive} from 'vue';
 import type { HttpAPI } from "@/types/api"
 
+const categoriesAPI: HttpAPI | undefined = inject('categoriesAPI')
+const productsAPI: HttpAPI | undefined = inject('productsAPI')
+const tempMediaAPI: HttpAPI | undefined = inject('tempMediaAPI')
 
 type buttonProps = {
   variant: "flat" | "text" | "elevated" | "tonal" | "outlined" | "plain" | undefined,
@@ -10,11 +13,20 @@ type buttonProps = {
   color: string | undefined
 }
 
+type Category = {
+  id?: number,
+  name: string,
+  type_id: number | null,
+  created_at?: Date,
+  updated_at?: Date
+}
+
 type Product = {
   id?: number,
   name: string,
   slug?: string,
   category_id: number | null,
+  group: string,
 
   id_description: string,
   en_description: string,
@@ -56,7 +68,40 @@ const props = defineProps({
 
 const dialog = ref(false)
 const file = ref<null | { click: () => null }>(null)
-const form = ref<Product>({
+const formProduct = ref<null | { validate: () => { valid: boolean } }>(null)
+const selectedCategory = ref<Category>()
+let categories: Array<Category> = []
+const rules = ref({
+  name: [
+    (v: string) => !!v || 'Name is required!'
+  ],
+  category_id: [
+    (v: number) => !!v || 'Category is required!'
+  ],
+  group: [],
+  id_description: [],
+  en_description: [],
+  features: [],
+  dimension_height: [
+    (v: number) => !!v || 'Dimension height is required'
+  ],
+  dimension_length: [
+    (v: number) => !!v || 'Dimension length is required'
+  ],
+  dimension_width: [
+    (v: number) => !!v || 'Dimension width is required'
+  ],
+  seat_width: [
+    (v: number) => !!v || 'Seat width is required'
+  ],
+  seat_height: [
+    (v: number) => !!v || 'Seat height is required'
+  ],
+  seat_length: [
+    (v: number) => !!v || 'Seat length is required'
+  ]
+})
+const base = {
   name: '',
   category_id: null,
   id_description: '',
@@ -68,27 +113,46 @@ const form = ref<Product>({
   seat_height: 0,
   seat_length: 0,
   dimension_width: 0,
+  group: '',
   files: []
-})
+}
+const form = ref<Product>({ ...base })
+const selectedFiles = ref<Array<any>>([])
 
 function close() {
-  resetForm()
   emits('close')
   dialog.value = false
 }
 
-function resetForm() {
-  // reset form
-}
-
-function validatingForm() {
+async function validatingForm() {
   // validating form
+  return formProduct.value?.validate()
 }
 
 async function submit() {
+  const isValidate = await validatingForm()
+  if (!isValidate?.valid ?? false) {
+    return
+  }
+  let response: Promise<any> | undefined
+  if (props.mode === 'create') {
+    response = productsAPI?.post(form.value)
+  } else {
+    response = productsAPI?.put(form.value.id!, form.value)
+  }
+  return response?.then(() => {
+      close()
+    })
+    .catch(err => {
+      throw err
+    })
+  
 }
 
 watch(form, validatingForm, { deep: true })
+watchEffect(() => {
+  form.value.category_id = selectedCategory.value?.id ?? 0
+})
 const buttonProps = computed((): buttonProps => {
   const buttonCreateProps: buttonProps = {
     variant: undefined,
@@ -105,15 +169,61 @@ const buttonProps = computed((): buttonProps => {
   return props.mode === 'create' ? buttonCreateProps : buttonEditProps
 })
 
+onMounted(() => {
+  categoriesAPI?.get()
+    .then(res => {
+      categories = res.data
+    })
+})
+
+function initForm() {
+  form.value = {
+    name: '',
+    category_id: null,
+    id_description: '',
+    en_description: '',
+    features: '',
+    dimension_height: 0,
+    dimension_length: 0,
+    seat_width: 0,
+    seat_height: 0,
+    seat_length: 0,
+    dimension_width: 0,
+    group: '',
+    files: []
+  }
+  selectedFiles.value = []
+}
+
 async function onBtnClick() {
+  initForm()
+  if (props.mode !== 'create') {
+    productsAPI?.show(props.id)
+    .then(res => {
+      form.value = { ...base, ...res.data }
+      selectedCategory.value = categories.find(category => category.id === form.value.category_id)
+    })
+  }
 }
 
 function clickFile() {
   file.value?.click()
 }
 
-function onFileInput(v: any): void {
-  form.value.files = [...form.value.files, ...v.target.files]
+async function onFileInput(v: any): Promise<void> {
+  const files = v.target.files
+  const requests = []
+  for (let index = 0; index < files.length; index++) {
+    const file = files.item(index)
+    const fd = new FormData()
+    fd.append('file', file)
+    requests.push(tempMediaAPI?.post(fd))
+  }
+  await Promise.all(requests)
+    .then(responses => {
+      form.value.files = [...form.value.files, ...responses.map(response => response.data)]
+    })
+  selectedFiles.value = [...selectedFiles.value, ...v.target.files]
 }
 
 function deleteFile(indexFile: number) {
@@ -158,6 +268,7 @@ function isNumber (evt: KeyboardEvent): void {
                 >
                   <v-text-field
                     v-model="form.name"
+                    :rules="rules.name"
                     label="Product Name"
                   />
                 </v-col>
@@ -165,46 +276,60 @@ function isNumber (evt: KeyboardEvent): void {
                   md="6"
                 >
                   <v-autocomplete
-                    v-model="form.category_id"
+                    v-model="selectedCategory"
+                    :rules="rules.category_id"
+                    :items="categories"
                     label="Category"
+                    item-title="name"
+                    return-object
+                  />
+                </v-col>
+                <v-col
+                  md="6"
+                >
+                  <v-combobox
+                    v-model="form.group"
+                    :rules="rules.group"
+                    :items="[]"
+                    label="Group"
                   />
                 </v-col>
               </v-row>
               <v-row>
                 <v-col md="12">
-                  <v-textarea v-model="form.en_description" label="Description (English)" counter />
+                  <v-textarea v-model="form.en_description" :rules="rules.en_description" label="Description (English)" counter />
                 </v-col>
                 <v-col md="12">
-                  <v-textarea v-model="form.id_description" label="Description (Bahasa)" counter />
+                  <v-textarea v-model="form.id_description" :rules="rules.id_description" label="Description (Bahasa)" counter />
                 </v-col>
               </v-row>
               <v-row>
                 <v-col md="12">
-                  <v-textarea v-model="form.features" label="Features" counter />
+                  <v-textarea v-model="form.features" :rules="rules.features" label="Features" counter />
                 </v-col>
               </v-row>
               <v-row>
                 <v-col md="12"><h3>Dimension</h3></v-col>
                 <v-col md="4">
-                  <v-text-field v-model.number="form.dimension_width" @keypress="isNumber" label="Width" />
+                  <v-text-field v-model.number="form.dimension_width" :rules="rules.dimension_width" @keypress="isNumber" label="Width" />
                 </v-col>
                 <v-col md="4">
-                  <v-text-field v-model.number="form.dimension_length"  @keypress="isNumber" label="Length" />
+                  <v-text-field v-model.number="form.dimension_length" :rules="rules.dimension_length" @keypress="isNumber" label="Length" />
                 </v-col>
                 <v-col md="4">
-                  <v-text-field v-model.number="form.dimension_height"  @keypress="isNumber" label="Height" />
+                  <v-text-field v-model.number="form.dimension_height" :rules="rules.dimension_height" @keypress="isNumber" label="Height" />
                 </v-col>
               </v-row>
               <v-row>
                 <v-col md="12"><h3>Seat</h3></v-col>
                 <v-col md="4">
-                  <v-text-field v-model.number="form.seat_width"  @keypress="isNumber" label="Width" />
+                  <v-text-field v-model.number="form.seat_width" :rules="rules.seat_width" @keypress="isNumber" label="Width" />
                 </v-col>
                 <v-col md="4">
-                  <v-text-field v-model.number="form.seat_length"  @keypress="isNumber" label="Length" />
+                  <v-text-field v-model.number="form.seat_length" :rules="rules.seat_length" @keypress="isNumber" label="Length" />
                 </v-col>
                 <v-col md="4">
-                  <v-text-field v-model.number="form.seat_height"  @keypress="isNumber" label="Height" />
+                  <v-text-field v-model.number="form.seat_height" :rules="rules.seat_height" @keypress="isNumber" label="Height" />
                 </v-col>
               </v-row>
               <v-row>
@@ -217,7 +342,7 @@ function isNumber (evt: KeyboardEvent): void {
                   <input ref="file" type="file" accept=".png,.jpg,.jpeg" multiple style="visibility: hidden;" @input="onFileInput"/>
                 </v-col>
                 <v-col md="12" class="files">
-                  <div v-for="(file, i) in form.files" :index="i" class="chip-container">
+                  <div v-for="(file, i) in selectedFiles" :index="i" class="chip-container">
                     <v-chip prepend-icon="mdi-file-image"> 
                       {{ $ellipsis(file.name, 20) }}
                       <v-icon icon="mdi-trash-can-outline" color="pink" style="margin-left: 5px;" @click="deleteFile(i)" />

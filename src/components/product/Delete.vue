@@ -9,11 +9,11 @@ const props = defineProps({
   }
 })
 const emits = defineEmits(['close'])
-const categoriesAPI: HttpAPI | undefined = inject('categoriesAPI')
+const productsAPI: HttpAPI | undefined = inject('productsAPI')
 const dialog = ref(false)
 
 function remove() {
-  return categoriesAPI?.delete(props.id)
+  return productsAPI?.delete(props.id)
     .then(() => {
       close()
     })

@@ -22,6 +22,14 @@ const apis = {
     const route = '/api/types'
     return defaultMethodsRouteFactory(http, route)
   },
+  products: (http: AxiosInstance): HttpAPI => {
+    const route = '/api/products'
+    return defaultMethodsRouteFactory(http, route)
+  },
+  tempMedia: (http: AxiosInstance): HttpAPI => {
+    const route = '/api/temp-media'
+    return defaultMethodsRouteFactory(http, route)
+  },
 }
 
 function registerApis(app: any, http: AxiosInstance) {
