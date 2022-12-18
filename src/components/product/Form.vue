@@ -34,6 +34,7 @@ type Product = {
   id_description: string,
   en_description: string,
   features: string,
+  premium_material: string,
 
   dimension_width: number,
   dimension_length: number,
@@ -88,6 +89,7 @@ const rules = ref({
   id_description: [],
   en_description: [],
   features: [],
+  premium_material: [],
   dimension_height: [
     (v: number) => !!v || 'Dimension height is required'
   ],
@@ -113,6 +115,7 @@ const base = {
   id_description: '',
   en_description: '',
   features: '',
+  premium_material: '',
   dimension_height: 0,
   dimension_length: 0,
   seat_width: 0,
@@ -194,6 +197,7 @@ function initForm() {
     id_description: '',
     en_description: '',
     features: '',
+    premium_material: '',
     dimension_height: 0,
     dimension_length: 0,
     seat_width: 0,
@@ -336,6 +340,9 @@ function setImages(images: Array<any>) {
               <v-row>
                 <v-col md="12">
                   <v-textarea v-model="form.features" :rules="rules.features" label="Features" counter />
+                </v-col>
+                <v-col md="12">
+                  <v-textarea v-model="form.premium_material" :rules="rules.premium_material" label="Premium Material" counter />
                 </v-col>
               </v-row>
               <v-row>
