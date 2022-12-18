@@ -5,9 +5,12 @@ import type { HttpAPI } from "@/types/api"
 const categoriesAPI: HttpAPI | undefined = inject('categoriesAPI')
 const productsAPI: HttpAPI | undefined = inject('productsAPI')
 const tempMediaAPI: HttpAPI | undefined = inject('tempMediaAPI')
+const variant = ["flat", "text", "elevated", "tonal", "outlined", "plain", undefined] as const
+
+type Variant = typeof variant[number]
 
 type buttonProps = {
-  variant: "flat" | "text" | "elevated" | "tonal" | "outlined" | "plain" | undefined,
+  variant: Variant,
   icon: string | undefined,
   size: string | undefined,
   color: string | undefined
@@ -40,10 +43,13 @@ type Product = {
   seat_length: number,
   seat_height: number,
 
-  files: Array<File>,
-
   created_at?: Date,
   updated_at?: Date
+}
+
+type FormProduct = Product & {
+  files: Array<any>,
+  removedFiles: Array<any>
 }
 
 const emits = defineEmits(['close'])
@@ -114,9 +120,10 @@ const base = {
   seat_length: 0,
   dimension_width: 0,
   group: '',
-  files: []
+  files: [],
+  removedFiles: []
 }
-const form = ref<Product>({ ...base })
+const form = ref<FormProduct>({ ...base })
 const selectedFiles = ref<Array<any>>([])
 
 function close() {
@@ -135,10 +142,14 @@ async function submit() {
     return
   }
   let response: Promise<any> | undefined
+  const payload = {
+    ...form.value,
+    files: form.value.files.map(file => file.id)
+  }
   if (props.mode === 'create') {
-    response = productsAPI?.post(form.value)
+    response = productsAPI?.post(payload)
   } else {
-    response = productsAPI?.put(form.value.id!, form.value)
+    response = productsAPI?.put(form.value.id!, payload)
   }
   return response?.then(() => {
       close()
@@ -190,7 +201,8 @@ function initForm() {
     seat_length: 0,
     dimension_width: 0,
     group: '',
-    files: []
+    files: [],
+    removedFiles: []
   }
   selectedFiles.value = []
 }
@@ -200,8 +212,10 @@ async function onBtnClick() {
   if (props.mode !== 'create') {
     productsAPI?.show(props.id)
     .then(res => {
-      form.value = { ...base, ...res.data }
+      const { images, ...data} = res.data
+      form.value = { ...base, ...data }
       selectedCategory.value = categories.find(category => category.id === form.value.category_id)
+      setImages(images)
     })
   }
 }
@@ -221,14 +235,26 @@ async function onFileInput(v: any): Promise<void> {
   }
   await Promise.all(requests)
     .then(responses => {
-      form.value.files = [...form.value.files, ...responses.map(response => response.data)]
+      form.value.files = [...form.value.files, ...responses.reduce((pre, curr, currIndex) => {
+        pre.push({
+          id: curr.data,
+          file: files.item(currIndex)
+        })
+        return pre
+      }, [])]
     })
   selectedFiles.value = [...selectedFiles.value, ...v.target.files]
 }
 
-function deleteFile(indexFile: number) {
+function deleteFile(file: any) {
   try {
-    form.value.files = form.value.files.filter(file => file !== form.value.files[indexFile])
+    if (file.id) {
+      form.value.removedFiles = [...form.value.removedFiles, file.id]
+      selectedFiles.value = selectedFiles.value.filter(selectedFile => (selectedFile?.id ?? 0) !== file.id)
+    } else {
+      selectedFiles.value = selectedFiles.value.filter(selectedFile => selectedFile !== file)
+      form.value.files = form.value.files.filter(formFile => formFile.file !== file)
+    }
   } catch (error) {
     console.log('Error while deleting file')
     throw error
@@ -242,6 +268,10 @@ function isNumber (evt: KeyboardEvent): void {
   if (!keysAllowed.includes(keyPressed)) {
           evt.preventDefault()
   }
+}
+
+function setImages(images: Array<any>) {
+  selectedFiles.value = images.map(image => ({ ...image, name: image.original_name }))
 }
 </script>
 
@@ -345,7 +375,7 @@ function isNumber (evt: KeyboardEvent): void {
                   <div v-for="(file, i) in selectedFiles" :index="i" class="chip-container">
                     <v-chip prepend-icon="mdi-file-image"> 
                       {{ $ellipsis(file.name, 20) }}
-                      <v-icon icon="mdi-trash-can-outline" color="pink" style="margin-left: 5px;" @click="deleteFile(i)" />
+                      <v-icon icon="mdi-trash-can-outline" color="pink" style="margin-left: 5px;" @click="deleteFile(file)" />
                     </v-chip>
                     <div class="tooltip">{{ file.name }}</div>
                   </div>
