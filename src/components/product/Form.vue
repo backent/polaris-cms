@@ -29,7 +29,7 @@ type Product = {
   name: string,
   slug?: string,
   category_id: number | null,
-  group: string,
+  code: string,
 
   id_description: string,
   en_description: string,
@@ -85,28 +85,28 @@ const rules = ref({
   category_id: [
     (v: number) => !!v || 'Category is required!'
   ],
-  group: [],
+  code: [],
   id_description: [],
   en_description: [],
   features: [],
   premium_material: [],
   dimension_height: [
-    (v: number) => !!v || 'Dimension height is required'
+    // (v: number) => !!v || 'Dimension height is required'
   ],
   dimension_length: [
-    (v: number) => !!v || 'Dimension length is required'
+    // (v: number) => !!v || 'Dimension length is required'
   ],
   dimension_width: [
-    (v: number) => !!v || 'Dimension width is required'
+    // (v: number) => !!v || 'Dimension width is required'
   ],
   seat_width: [
-    (v: number) => !!v || 'Seat width is required'
+    // (v: number) => !!v || 'Seat width is required'
   ],
   seat_height: [
-    (v: number) => !!v || 'Seat height is required'
+    // (v: number) => !!v || 'Seat height is required'
   ],
   seat_length: [
-    (v: number) => !!v || 'Seat length is required'
+    // (v: number) => !!v || 'Seat length is required'
   ]
 })
 const base = {
@@ -122,7 +122,7 @@ const base = {
   seat_height: 0,
   seat_length: 0,
   dimension_width: 0,
-  group: '',
+  code: '',
   files: [],
   removedFiles: []
 }
@@ -204,7 +204,7 @@ function initForm() {
     seat_height: 0,
     seat_length: 0,
     dimension_width: 0,
-    group: '',
+    code: '',
     files: [],
     removedFiles: []
   }
@@ -321,11 +321,10 @@ function setImages(images: Array<any>) {
                 <v-col
                   md="6"
                 >
-                  <v-combobox
-                    v-model="form.group"
-                    :rules="rules.group"
-                    :items="[]"
-                    label="Group"
+                  <v-text-field
+                    v-model="form.code"
+                    :rules="rules.code"
+                    label="Code"
                   />
                 </v-col>
               </v-row>
