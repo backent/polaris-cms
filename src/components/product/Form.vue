@@ -218,7 +218,7 @@ async function onBtnClick() {
     .then(res => {
       const { images, ...data} = res.data
       form.value = { ...base, ...data }
-      selectedCategory.value = categories.find(category => category.id === form.value.category_id)
+      selectedCategory.value = categories.find(category => parseInt(category.id, 10) === parseInt(form.value.category_id, 10))
       setImages(images)
     })
   }
