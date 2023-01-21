@@ -48,7 +48,7 @@ const computedItems = computed(() => {
 })
 
 const paginationLength = computed(() => {
-  return Math.ceil(computedItems.value.length / perPage)
+  return Math.ceil(filteredItems.value.length / perPage)
 })
 
 </script>
