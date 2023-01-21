@@ -1,32 +1,12 @@
 <script setup lang="ts">
 import { inject, onMounted, ref, watch, computed, nextTick, watchEffect, reactive} from 'vue';
 import type { HttpAPI } from "@/types/api"
+import type { Category } from '@/types/category';
+import type { ButtonProps } from '@/types/others';
+import type { TypeProduct } from '@/types/typeproduct';
 
 const typesAPI: HttpAPI | undefined = inject('typesAPI')
 const categoriesAPI: HttpAPI | undefined = inject('categoriesAPI')
-
-type Category = {
-  id?: number,
-  name: string,
-  type_id: number | null,
-  created_at?: Date,
-  updated_at?: Date
-}
-
-type TypeProduct = {
-  id?: number | null,
-  name: string,
-  slug?: string,
-  created_at?: Date,
-  updated_at?: Date
-}
-
-type buttonProps = {
-  variant: "flat" | "text" | "elevated" | "tonal" | "outlined" | "plain" | undefined,
-  icon: string | undefined,
-  size: string | undefined,
-  color: string | undefined
-}
 
 const emits = defineEmits(['close'])
 const props = defineProps({
@@ -105,14 +85,14 @@ watch(form, validatingForm, { deep: true })
 watchEffect(() => {
   form.value.type_id = selectedType.value?.id ?? 0
 })
-const buttonProps = computed((): buttonProps => {
-  const buttonCreateProps: buttonProps = {
+const buttonProps = computed((): ButtonProps => {
+  const buttonCreateProps: ButtonProps = {
     variant: undefined,
     icon: undefined,
     size: undefined,
     color: 'primary'
   }
-  const buttonEditProps: buttonProps = {
+  const buttonEditProps: ButtonProps = {
     variant: 'plain',
     icon: props.icon,
     size: 'x-small',

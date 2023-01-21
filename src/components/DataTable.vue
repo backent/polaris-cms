@@ -18,13 +18,29 @@ const props = defineProps({
   items: {
     type: Array,
     default: () => ([])
+  },
+  filterBy: {
+    type: Object,
+    default: () => ({})
   }
 })
 
 const computedItems = computed(() => {
+  let items = [...props.items]
+  Object.entries(props.filterBy).forEach(([field, value]: Array<any>) => {
+    if (!!value) {
+      items = items.filter((item: any) => {
+        if (typeof item[field] === 'number') {
+          return item[field] === parseInt(value, 10)
+        } else {
+          return String(item[field]).includes(value)
+        }
+      })
+    }
+  })
   const start = perPage * page.value - perPage
   const end = perPage * page.value
-  return props.items.slice(start, end)
+  return items.slice(start, end)
 })
 
 const paginationLength = computed(() => {
@@ -38,14 +54,14 @@ const paginationLength = computed(() => {
     <v-table>
       <thead>
         <tr>
-          <td v-for="(header, iHeader) in headers" :key="iHeader">
+          <td v-for="(header, iHeader) in (headers as Array<any>)" :key="iHeader">
             {{ header.text }}
           </td>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(item, iItem) in computedItems" :key="iItem">
-          <td v-for="(header, iHeader) in headers" :key="iHeader">
+        <tr v-for="(item, iItem) in (computedItems as Array<any>)" :key="iItem">
+          <td v-for="(header, iHeader) in (headers as Array<any>)" :key="iHeader">
             <slot :name="header.value" :value="item[header.value]" :item="item"> {{ item[header.value] }} </slot>
           </td>
         </tr>

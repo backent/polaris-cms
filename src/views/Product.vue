@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import DataTable from '@/components/DataTable.vue';
+import Filter from '@/components/Filter.vue';
 import type { HttpAPI } from '@/types/api';
+import type { ProductFilter } from '@/types/product';
 import { computed } from '@vue/reactivity';
 import { inject, onMounted, ref, defineAsyncComponent } from 'vue';
 const Form = defineAsyncComponent(() => import('@/components/product/Form.vue'))
@@ -18,12 +20,22 @@ const headers = computed(() => {
     { text: 'Actions', value: 'action' },
   ]
 })
+const filterBy = ref<ProductFilter>({
+  name: '',
+  code: '',
+  category_id: null
+})
 
 function mounted(): void {
   productsAPI?.get()
     .then(res => {
       products.value = res.data
     })
+}
+
+function onFilter(data: ProductFilter): void {
+  console.log({data})
+  filterBy.value = {...data}
 }
 
 onMounted(() => {
@@ -40,12 +52,14 @@ onMounted(() => {
           <v-card-title>
             <div class="d-flex justify-space-between">
               Products
-              
-              <Form @close="mounted()" />
+              <div>
+                <Filter @filter="onFilter" />
+                <Form @close="mounted()" />
+              </div>
             </div>
           </v-card-title>
           <v-card-text>
-            <DataTable :headers="headers" :items="products">
+            <DataTable :headers="headers" :items="products" :filterBy="filterBy">
               <template #no="{ item }">
                 {{ products.findIndex((product: any) => product.id === item.id)! + 1 }}
               </template>

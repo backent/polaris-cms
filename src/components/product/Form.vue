@@ -1,57 +1,13 @@
 <script setup lang="ts">
 import { inject, onMounted, ref, watch, computed, nextTick, watchEffect, reactive} from 'vue';
 import type { HttpAPI } from "@/types/api"
+import type { FormProduct } from '@/types/product';
+import type { Category } from '@/types/category';
+import type { ButtonProps } from '@/types/others';
 
 const categoriesAPI: HttpAPI | undefined = inject('categoriesAPI')
 const productsAPI: HttpAPI | undefined = inject('productsAPI')
 const tempMediaAPI: HttpAPI | undefined = inject('tempMediaAPI')
-const variant = ["flat", "text", "elevated", "tonal", "outlined", "plain", undefined] as const
-
-type Variant = typeof variant[number]
-
-type buttonProps = {
-  variant: Variant,
-  icon: string | undefined,
-  size: string | undefined,
-  color: string | undefined
-}
-
-type Category = {
-  id?: number,
-  name: string,
-  type_id: number | null,
-  created_at?: Date,
-  updated_at?: Date
-}
-
-type Product = {
-  id?: number,
-  name: string,
-  slug?: string,
-  category_id: number | null,
-  code: string,
-
-  id_description: string,
-  en_description: string,
-  features: string,
-  premium_material: string,
-
-  dimension_width: number,
-  dimension_length: number,
-  dimension_height: number,
-  
-  seat_width: number,
-  seat_length: number,
-  seat_height: number,
-
-  created_at?: Date,
-  updated_at?: Date
-}
-
-type FormProduct = Product & {
-  files: Array<any>,
-  removedFiles: Array<any>
-}
 
 const emits = defineEmits(['close'])
 const props = defineProps({
@@ -167,14 +123,14 @@ watch(form, validatingForm, { deep: true })
 watchEffect(() => {
   form.value.category_id = selectedCategory.value?.id ?? 0
 })
-const buttonProps = computed((): buttonProps => {
-  const buttonCreateProps: buttonProps = {
+const buttonProps = computed((): ButtonProps => {
+  const buttonCreateProps: ButtonProps = {
     variant: undefined,
     icon: undefined,
     size: undefined,
     color: 'primary'
   }
-  const buttonEditProps: buttonProps = {
+  const buttonEditProps: ButtonProps = {
     variant: 'plain',
     icon: props.icon,
     size: 'x-small',
@@ -218,7 +174,7 @@ async function onBtnClick() {
     .then(res => {
       const { images, ...data} = res.data
       form.value = { ...base, ...data }
-      selectedCategory.value = categories.find(category => parseInt(category.id, 10) === parseInt(form.value.category_id, 10))
+      selectedCategory.value = categories.find(category => category.id === form.value.category_id)
       setImages(images)
     })
   }
