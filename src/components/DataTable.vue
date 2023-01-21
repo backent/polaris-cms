@@ -33,7 +33,7 @@ const computedItems = computed(() => {
         if (typeof item[field] === 'number') {
           return item[field] === parseInt(value, 10)
         } else {
-          return String(item[field]).includes(value)
+          return String(item[field]).toLowerCase().includes(value.toLowerCase())
         }
       })
     }
@@ -44,7 +44,7 @@ const computedItems = computed(() => {
 })
 
 const paginationLength = computed(() => {
-  return Math.ceil(props.items.length / perPage)
+  return Math.ceil(computedItems.value.length / perPage)
 })
 
 </script>
