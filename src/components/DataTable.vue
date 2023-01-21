@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 
 type Header = {
   text: string,
@@ -39,6 +39,10 @@ const filteredItems = computed<Array<any>>(() => {
     }
   })
   return items
+})
+
+watch(filteredItems, () => {
+  page.value = 1
 })
 
 const computedItems = computed(() => {
