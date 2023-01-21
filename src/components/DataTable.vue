@@ -25,7 +25,7 @@ const props = defineProps({
   }
 })
 
-const computedItems = computed(() => {
+const filteredItems = computed<Array<any>>(() => {
   let items = [...props.items]
   Object.entries(props.filterBy).forEach(([field, value]: Array<any>) => {
     if (!!value) {
@@ -38,9 +38,13 @@ const computedItems = computed(() => {
       })
     }
   })
+  return items
+})
+
+const computedItems = computed(() => {
   const start = perPage * page.value - perPage
   const end = perPage * page.value
-  return items.slice(start, end)
+  return filteredItems.value.slice(start, end)
 })
 
 const paginationLength = computed(() => {
