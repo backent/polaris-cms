@@ -13,6 +13,7 @@ const headers = computed(() => {
   return [
     { text: 'No', value: 'no' },
     { text: 'Name', value: 'name' },
+    { text: 'Code', value: 'code' },
     { text: 'Slug', value: 'slug' },
     { text: 'Actions', value: 'action' },
   ]
@@ -39,6 +40,7 @@ onMounted(() => {
           <v-card-title>
             <div class="d-flex justify-space-between">
               Products
+              
               <Form @close="mounted()" />
             </div>
           </v-card-title>
