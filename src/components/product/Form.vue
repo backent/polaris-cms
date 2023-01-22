@@ -30,6 +30,7 @@ const props = defineProps({
 })
 
 const dialog = ref(false)
+const loadingSubmit = ref(false)
 const file = ref<null | { click: () => null }>(null)
 const formProduct = ref<null | { validate: () => { valid: boolean } }>(null)
 const selectedCategory = ref<Category>()
@@ -105,6 +106,7 @@ async function submit() {
     ...form.value,
     files: form.value.files.map(file => file.id)
   }
+  loadingSubmit.value = true
   if (props.mode === 'create') {
     response = productsAPI?.post(payload)
   } else {
@@ -115,6 +117,9 @@ async function submit() {
     })
     .catch(err => {
       throw err
+    })
+    .finally(() => {
+      loadingSubmit.value = false
     })
   
 }
@@ -350,7 +355,8 @@ function setImages(images: Array<any>) {
           class="footer-form"
         >
           <v-spacer />
-          <v-btn color="primary" @click="submit">Save</v-btn>
+          <v-btn v-if="!loadingSubmit" color="primary" @click="submit">Save</v-btn>
+          <div v-else class="lds-facebook"><div></div><div></div><div></div></div>
           <v-btn color="orange" @click="close">Close</v-btn>
         </v-card-actions>
       </v-card>
@@ -387,4 +393,42 @@ function setImages(images: Array<any>) {
   display: flex;
   flex-flow: row wrap;
 }
+.lds-facebook {
+  display: inline-block;
+  position: relative;
+  width: 80px;
+  height: 80px;
+  transform: scale(35%);
+}
+.lds-facebook div {
+  display: inline-block;
+  position: absolute;
+  left: 8px;
+  width: 16px;
+  background: #a371eb;
+  animation: lds-facebook 1.2s cubic-bezier(0, 0.5, 0.5, 1) infinite;
+}
+.lds-facebook div:nth-child(1) {
+  left: 8px;
+  animation-delay: -0.24s;
+}
+.lds-facebook div:nth-child(2) {
+  left: 32px;
+  animation-delay: -0.12s;
+}
+.lds-facebook div:nth-child(3) {
+  left: 56px;
+  animation-delay: 0;
+}
+@keyframes lds-facebook {
+  0% {
+    top: 8px;
+    height: 64px;
+  }
+  50%, 100% {
+    top: 24px;
+    height: 32px;
+  }
+}
+
 </style>

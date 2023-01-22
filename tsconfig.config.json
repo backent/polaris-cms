@@ -4,6 +4,6 @@
   "compilerOptions": {
     "composite": true,
     "types": ["node", "vuetify"],
-    "lib": ["es2017"]
+    "lib": ["ES2018"]
   }
 }
