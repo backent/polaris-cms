@@ -70,7 +70,7 @@ const paginationLength = computed(() => {
       <tbody>
         <tr v-for="(item, iItem) in (computedItems as Array<any>)" :key="iItem">
           <td v-for="(header, iHeader) in (headers as Array<any>)" :key="iHeader">
-            <slot :name="header.value" :value="item[header.value]" :item="item"> {{ item[header.value] }} </slot>
+            <slot :name="header.value" :value="item[header.value]" :item="item" :currentIndex="iItem"> {{ item[header.value] }} </slot>
           </td>
         </tr>
       </tbody>

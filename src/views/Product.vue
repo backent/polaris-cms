@@ -34,7 +34,6 @@ function mounted(): void {
 }
 
 function onFilter(data: ProductFilter): void {
-  console.log({data})
   filterBy.value = {...data}
 }
 
@@ -60,8 +59,8 @@ onMounted(() => {
           </v-card-title>
           <v-card-text>
             <DataTable :headers="headers" :items="products" :filterBy="filterBy">
-              <template #no="{ item }">
-                {{ products.findIndex((product: any) => product.id === item.id)! + 1 }}
+              <template #no="{ currentIndex }">
+                {{ currentIndex + 1 }}
               </template>
               <template #action="{ item }">
                 <div class="action">

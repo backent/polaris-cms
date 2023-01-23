@@ -44,8 +44,8 @@ onMounted(() => {
           </v-card-title>
           <v-card-text>
             <DataTable :headers="headers" :items="categories">
-              <template #no="{ item }">
-                {{ categories.findIndex((category: any) => category.id === item.id)! + 1 }}
+              <template #no="{ currentIndex }">
+                {{ currentIndex + 1 }}
               </template>
               <template #action="{ item }">
                 <div class="action">
