@@ -13,6 +13,7 @@ import HomeView from "../views/HomeView.vue";
 const Category = () => import('@/views/Category.vue')
 const Product = () => import('@/views/Product.vue')
 const Login = () => import('@/views/Login.vue')
+const Setting = () => import('@/views/Setting.vue')
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -31,6 +32,11 @@ const router = createRouter({
       path: '/products',
       name: 'product',
       component: Product
+    },
+    {
+      path: '/settings',
+      name: 'setting',
+      component: Setting
     },
     {
       path: '/login',

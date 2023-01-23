@@ -10,7 +10,8 @@ type baseRoute = {
 
 const items = ref<baseRoute[]>([
   { text: 'Categories', icon: 'mdi-folder', to: { name: 'category' } },
-  { text: 'Products', icon: 'mdi-folder', to: { name: 'product' } }
+  { text: 'Products', icon: 'mdi-folder', to: { name: 'product' } },
+  { text: 'Settings', icon: 'mdi-folder', to: { name: 'setting' } }
 ])
 </script>
 

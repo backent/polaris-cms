@@ -30,6 +30,10 @@ const apis = {
     const route = '/api/temp-media'
     return defaultMethodsRouteFactory(http, route)
   },
+  settings: (http: AxiosInstance): HttpAPI => {
+    const route = '/api/settings'
+    return defaultMethodsRouteFactory(http, route)
+  },
 }
 
 function registerApis(app: any, http: AxiosInstance) {
