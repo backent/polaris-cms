@@ -11,6 +11,7 @@ const DeleteDialog = defineAsyncComponent(() => import('@/components/product/Del
 const productsAPI: HttpAPI | undefined = inject('productsAPI')
 
 const products = ref([])
+const tableKey = ref(1)
 const headers = computed(() => {
   return [
     { text: 'No', value: 'no' },
@@ -35,6 +36,7 @@ function mounted(): void {
 
 function onFilter(data: ProductFilter): void {
   filterBy.value = {...data}
+  tableKey.value += 1
 }
 
 onMounted(() => {
@@ -58,9 +60,9 @@ onMounted(() => {
             </div>
           </v-card-title>
           <v-card-text>
-            <DataTable :headers="headers" :items="products" :filterBy="filterBy">
-              <template #no="{ currentIndex }">
-                {{ currentIndex + 1 }}
+            <DataTable :headers="headers" :items="products" :filterBy="filterBy" :key="tableKey">
+              <template #no="{ currentIndex, currentPage }">
+                {{ (currentIndex + 1) + ((currentPage - 1) * 10) }}
               </template>
               <template #action="{ item }">
                 <div class="action">
