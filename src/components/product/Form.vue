@@ -4,11 +4,13 @@ import type { HttpAPI } from "@/types/api"
 import type { FormProduct } from '@/types/product';
 import type { Category } from '@/types/category';
 import type { ButtonProps } from '@/types/others';
-
+import { VueDraggableNext } from 'vue-draggable-next';
+ 
 const categoriesAPI: HttpAPI | undefined = inject('categoriesAPI')
 const productsAPI: HttpAPI | undefined = inject('productsAPI')
 const tempMediaAPI: HttpAPI | undefined = inject('tempMediaAPI')
 
+const apiHost = import.meta.env.VITE_API_URL ?? 'http://localhost:7008'
 const emits = defineEmits(['close'])
 const props = defineProps({
   mode: {
@@ -81,7 +83,8 @@ const base = {
   dimension_width: 0,
   code: '',
   files: [],
-  removedFiles: []
+  removedFiles: [],
+  order: []
 }
 const form = ref<FormProduct>({ ...base })
 const selectedFiles = ref<Array<any>>([])
@@ -104,7 +107,8 @@ async function submit() {
   let response: Promise<any> | undefined
   const payload = {
     ...form.value,
-    files: form.value.files.map(file => file.id)
+    files: form.value.files.map(file => file.id),
+    order: generateOrderRequest()
   }
   loadingSubmit.value = true
   if (props.mode === 'create') {
@@ -167,7 +171,8 @@ function initForm() {
     dimension_width: 0,
     code: '',
     files: [],
-    removedFiles: []
+    removedFiles: [],
+    order: []
   }
   selectedFiles.value = []
 }
@@ -208,7 +213,9 @@ async function onFileInput(v: any): Promise<void> {
         return pre
       }, [])]
     })
-  selectedFiles.value = [...selectedFiles.value, ...v.target.files]
+    .then(() => {
+      selectedFiles.value = [...selectedFiles.value, ...v.target.files]
+    })
 }
 
 function deleteFile(file: any) {
@@ -237,6 +244,33 @@ function isNumber (evt: KeyboardEvent): void {
 
 function setImages(images: Array<any>) {
   selectedFiles.value = images.map(image => ({ ...image, name: image.original_name }))
+}
+
+function generateOrderRequest(): Array<any> {
+  const result = selectedFiles.value.reduce((pre, curr, currIndex) => {
+    const newImage = !curr.id
+    const order = currIndex + 1
+    if (newImage) {
+      pre.push({
+        newImage: true,
+        order,
+        id: form.value.files.find(file => file.file === curr)!.id
+      })
+    } else {
+      pre.push({
+        newImage: false,
+        order,
+        id: curr.id
+      })
+    }
+    return pre
+  }, [])
+  
+  return result
+}
+
+function printUrl(file: any) {
+  return URL.createObjectURL(file)
 }
 </script>
 
@@ -339,13 +373,18 @@ function setImages(images: Array<any>) {
                   <input ref="file" type="file" accept=".png,.jpg,.jpeg" multiple style="visibility: hidden;" @input="onFileInput"/>
                 </v-col>
                 <v-col md="12" class="files">
-                  <div v-for="(file, i) in selectedFiles" :index="i" class="chip-container">
-                    <v-chip prepend-icon="mdi-file-image"> 
-                      {{ $ellipsis(file.name, 20) }}
-                      <v-icon icon="mdi-trash-can-outline" color="pink" style="margin-left: 5px;" @click="deleteFile(file)" />
-                    </v-chip>
-                    <div class="tooltip">{{ file.name }}</div>
-                  </div>
+                  <VueDraggableNext :list="selectedFiles" @change="debug">
+                    <div v-for="(file, i) in selectedFiles" :index="i" class="chip-container">
+                      <v-chip prepend-icon="mdi-file-image"> 
+                        {{ $ellipsis(file.name, 20) }}
+                        <v-icon icon="mdi-trash-can-outline" color="pink" style="margin-left: 5px;" @click="deleteFile(file)" />
+                      </v-chip>
+                      <div class="tooltip">
+                        <img v-if="file.link" :src="`${apiHost}${file.link}`" />
+                        <img v-else :src="printUrl(file)" />
+                      </div>
+                    </div>
+                  </VueDraggableNext>
                 </v-col>
               </v-row>
             </v-container>
@@ -371,21 +410,26 @@ function setImages(images: Array<any>) {
 .tooltip {
   visibility: hidden;
   position: absolute;
-  top: -30px;
-  left: 0;
+  top: -210px;
   white-space: nowrap;
-  background: rgba(0, 0,0, .7);
+  background: rgba(0, 0, 0, .2);
   border-radius: 8px;
   padding: 0 15px;
   color: white;
   /* transition: all .5s ease; */
 }
 
+.tooltip img {
+  height: 200px;
+  width: 200px;
+  object-fit: contain;
+}
+
 .chip-container {
   margin: 5px;
 }
 
-.chip-container:hover .tooltip {
+*:hover:not(:active) + .tooltip {
   visibility: visible;
 }
 

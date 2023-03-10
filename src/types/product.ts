@@ -24,7 +24,8 @@ export type Product = {
 
 export type FormProduct = Product & {
   files: Array<any>,
-  removedFiles: Array<any>
+  removedFiles: Array<any>,
+  order: Array<any>
 }
 
 export type ProductFilter = {
