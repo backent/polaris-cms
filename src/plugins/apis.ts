@@ -34,6 +34,10 @@ const apis = {
     const route = '/api/settings'
     return defaultMethodsRouteFactory(http, route)
   },
+  features: (http: AxiosInstance): HttpAPI => {
+    const route = '/api/product-features'
+    return defaultMethodsRouteFactory(http, route)
+  },
 }
 
 function registerApis(app: any, http: AxiosInstance) {
