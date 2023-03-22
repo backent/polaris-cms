@@ -300,13 +300,11 @@ async function updateFeatureOrder() {
                 <v-col md="2">
                   List Feature: 
                 </v-col>
-                <v-col md="12" class="d-flex justify-center">
-                  <VueDraggableNext v-model="features" @change="updateFeatureOrder()">
-                    <div
-                      v-for="(data, index) in (features as Features)"
-                      :key="data.id"
-                      class="container-feature-image"
-                    >
+              </v-row>
+              <v-row>
+                <VueDraggableNext v-model="features" @change="updateFeatureOrder()" class="d-flex justify-center">
+                  <v-col v-for="(data, index) in (features as Features)" class="container-feature-image"
+                      :key="data.id" md="2">
                       <img
                         class="feature-image"
                         :src="apiHost + data.link"
@@ -319,9 +317,8 @@ async function updateFeatureOrder() {
                       </div>
                       <DeleteFeature :id="data.id" class="delete-feature" @close="fetchFeatures()"/>
                       <Form :id="data.id" class="edit-feature" mode="edit" @close="fetchFeatures()"/>
-                    </div>
-                  </VueDraggableNext>
-                </v-col>
+                  </v-col>
+                </VueDraggableNext>
               </v-row>
             </v-container>
           </v-card-text>
@@ -333,6 +330,7 @@ async function updateFeatureOrder() {
 
 <style lang="scss">
 .container-feature-image {
+  width: 100%;
   display: inline-block;
   position: relative;
   cursor: grab;
@@ -346,6 +344,8 @@ async function updateFeatureOrder() {
     font-weight: 700;
   }
   .feature-image {
+    width: 100%;
+    height: auto;
     opacity: 1;
   }
   &:hover .feature-image {

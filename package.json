@@ -3,8 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "dev": "vite",
-    "build": "run-p build-only",
+    "dev": "NODE_ENV=development vite",
+    "build": "NODE_ENV=production run-p build-only",
     "build-check": "run-p type-check build-only",
     "preview": "vite preview",
     "test:unit": "vitest --environment jsdom --root src/",
@@ -24,7 +24,7 @@
     "vue": "^3.2.45",
     "vue-draggable-next": "^2.1.1",
     "vue-router": "^4.1.6",
-    "vuetify": "^3.0.2"
+    "vuetify": "^3.1.11"
   },
   "devDependencies": {
     "@mdi/font": "^7.0.96",

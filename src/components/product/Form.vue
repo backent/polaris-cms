@@ -5,10 +5,12 @@ import type { FormProduct } from '@/types/product';
 import type { Category } from '@/types/category';
 import type { ButtonProps } from '@/types/others';
 import { VueDraggableNext } from 'vue-draggable-next';
+import type { Features } from '@/types/feature';
  
 const categoriesAPI: HttpAPI | undefined = inject('categoriesAPI')
 const productsAPI: HttpAPI | undefined = inject('productsAPI')
 const tempMediaAPI: HttpAPI | undefined = inject('tempMediaAPI')
+const featuresAPI: HttpAPI | undefined = inject('featuresAPI')
 
 const apiHost = import.meta.env.VITE_API_URL ?? 'http://localhost:7008'
 const emits = defineEmits(['close'])
@@ -37,6 +39,8 @@ const file = ref<null | { click: () => null }>(null)
 const formProduct = ref<null | { validate: () => { valid: boolean } }>(null)
 const selectedCategory = ref<Category>()
 let categories: Array<Category> = []
+let features: Features = []
+
 const rules = ref({
   name: [
     (v: string) => !!v || 'Name is required!'
@@ -84,10 +88,12 @@ const base = {
   code: '',
   files: [],
   removedFiles: [],
-  order: []
+  order: [],
+  feature_ids: []
 }
 const form = ref<FormProduct>({ ...base })
 const selectedFiles = ref<Array<any>>([])
+const selectedFeatures = ref<Features>([])
 
 function close() {
   emits('close')
@@ -153,6 +159,10 @@ onMounted(() => {
     .then(res => {
       categories = res.data
     })
+  featuresAPI?.get()
+    .then(res => {
+      features = res.data
+    })
 })
 
 function initForm() {
@@ -172,7 +182,8 @@ function initForm() {
     code: '',
     files: [],
     removedFiles: [],
-    order: []
+    order: [],
+    feature_ids: []
   }
   selectedFiles.value = []
 }
@@ -363,6 +374,16 @@ function printUrl(file: any) {
                   <v-text-field v-model.number="form.seat_height" :rules="rules.seat_height" @keypress="isNumber" label="Height" />
                 </v-col>
               </v-row>
+              <v-row class="d-flex justify-center">
+                <v-col md="12"><h3>Features</h3></v-col>
+                <v-col :md="Math.floor(12 / features.length)" v-for="data in features" :key="data.id">
+                  <div class="feature-container">
+                    <label :for="`feature-${data.id}`"><img :src="data.link" /></label>
+                    <v-checkbox :id="`feature-${data.id}`" v-model="form.feature_ids" :value="data.id" class="checkbox" />
+                    <div class="feature-name"> {{ data.name }} </div>
+                  </div>
+                </v-col>
+              </v-row>
               <v-row>
                 <v-col md="3" style="height: 40px;">
                   <v-btn
@@ -373,7 +394,7 @@ function printUrl(file: any) {
                   <input ref="file" type="file" accept=".png,.jpg,.jpeg" multiple style="visibility: hidden;" @input="onFileInput"/>
                 </v-col>
                 <v-col md="12" class="files">
-                  <VueDraggableNext :list="selectedFiles" @change="debug">
+                  <VueDraggableNext :list="selectedFiles">
                     <div v-for="(file, i) in selectedFiles" :index="i" class="chip-container">
                       <v-chip prepend-icon="mdi-file-image"> 
                         {{ $ellipsis(file.name, 20) }}
@@ -403,7 +424,38 @@ function printUrl(file: any) {
   </v-btn>
 </template>
 
-<style scoped>
+<style lang="scss" scoped>
+
+.feature-container {
+  position: relative;
+  label {
+    cursor: pointer;
+  }
+  img {
+    width: 100%;
+    height: auto;
+  }
+  & > .checkbox {
+    position: absolute;
+    top: -20px;
+    right: 0;
+  }
+  .feature-name {
+    position: absolute;
+    top: 90px;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+
+    font-size: 16px;
+    font-weight: 700;
+    opacity: 0.6;
+    transition: all 0.3s;
+  }
+  &:hover .feature-name {
+    opacity: 1;
+  }
+}
 .card-actions > * {
   flex: 1 1 auto;
 }
@@ -474,5 +526,6 @@ function printUrl(file: any) {
     height: 32px;
   }
 }
+
 
 </style>

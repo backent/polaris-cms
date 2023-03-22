@@ -5,7 +5,9 @@ import dotenv from 'dotenv';
 import path from 'path';
 import vue from "@vitejs/plugin-vue";
 
-dotenv.config({ path: path.resolve(process.cwd(), '.env.production') })
+if (process.env.NODE_ENV === 'production') {
+  dotenv.config({ path: path.resolve(process.cwd(), '.env.production') })
+}
 
 // https://vitejs.dev/config/
 export default defineConfig({
