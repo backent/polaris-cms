@@ -376,7 +376,7 @@ function printUrl(file: any) {
               </v-row>
               <v-row class="d-flex justify-center">
                 <v-col md="12"><h3>Features</h3></v-col>
-                <v-col :md="Math.floor(12 / features.length)" v-for="data in features" :key="data.id">
+                <v-col md="3" v-for="data in features" :key="data.id">
                   <div class="feature-container">
                     <label :for="`feature-${data.id}`"><img :src="`${apiHost}${data.link}`" /></label>
                     <v-checkbox :id="`feature-${data.id}`" v-model="form.feature_ids" :value="data.id" class="checkbox" />
