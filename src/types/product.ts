@@ -24,7 +24,9 @@ export type Product = {
 
 export type FormProduct = Product & {
   files: Array<any>,
+  filesHeader: Array<any>,
   removedFiles: Array<any>,
+  removedFilesHeader: Array<any>,
   order: Array<any>,
   feature_ids: Array<number>
 }
