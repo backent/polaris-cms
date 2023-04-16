@@ -37,6 +37,7 @@ const dialog = ref(false)
 const loadingSubmit = ref(false)
 const file = ref<null | { click: () => null }>(null)
 const fileHeader = ref<null | { click: () => null }>(null)
+const fileDimension = ref<null | { click: () => null }>(null)
 const formProduct = ref<null | { validate: () => { valid: boolean } }>(null)
 const selectedCategory = ref<Category>()
 let categories: Array<Category> = []
@@ -89,14 +90,17 @@ const base = {
   code: '',
   files: [],
   filesHeader: [],
+  filesDimension: [],
   removedFiles: [],
   removedFilesHeader: [],
+  removedFilesDimension: [],
   order: [],
   feature_ids: []
 }
 const form = ref<FormProduct>({ ...base })
 const selectedFiles = ref<Array<any>>([])
 const selectedFilesHeader = ref<Array<any>>([])
+const selectedFilesDimension = ref<Array<any>>([])
 
 function close() {
   emits('close')
@@ -118,8 +122,10 @@ async function submit() {
     ...form.value,
     files: form.value.files.map(file => file.id),
     filesHeader: form.value.filesHeader.map(file => file.id),
+    filesDimension: form.value.filesDimension.map(file => file.id),
     order: generateOrderRequest(),
     orderHeader: generateOrderRequest('header'),
+    orderDimension: generateOrderRequest('header'),
   }
   loadingSubmit.value = true
   if (props.mode === 'create') {
@@ -187,8 +193,10 @@ function initForm() {
     code: '',
     files: [],
     filesHeader: [],
+    filesDimension: [],
     removedFiles: [],
     removedFilesHeader: [],
+    removedFilesDimension: [],
     order: [],
     feature_ids: []
   }
@@ -200,11 +208,12 @@ async function onBtnClick() {
   if (props.mode !== 'create') {
     productsAPI?.show(props.id)
     .then(res => {
-      const { images, images_header, ...data} = res.data
+      const { images, images_header, images_dimension, ...data} = res.data
       form.value = { ...base, ...data }
       selectedCategory.value = categories.find(category => category.id === form.value.category_id)
       setImages(images)
       setImages(images_header, 'header')
+      setImages(images_dimension, 'dimension')
     })
   }
 }
@@ -294,6 +303,49 @@ function deleteFileHeader(file: any) {
   }
 }
 
+function clickFileDimension() {
+  fileDimension.value?.click()
+}
+
+async function onFileInputDimension(v: any): Promise<void> {
+  const files = v.target.files
+  const requests = []
+  for (let index = 0; index < files.length; index++) {
+    const file = files.item(index)
+    const fd = new FormData()
+    fd.append('file', file)
+    requests.push(tempMediaAPI?.post(fd))
+  }
+  await Promise.all(requests)
+    .then(responses => {
+      form.value.filesDimension = [...form.value.filesDimension, ...responses.reduce((pre, curr, currIndex) => {
+        pre.push({
+          id: curr.data,
+          file: files.item(currIndex)
+        })
+        return pre
+      }, [])]
+    })
+    .then(() => {
+      selectedFilesDimension.value = [...selectedFilesDimension.value, ...v.target.files]
+    })
+}
+
+function deleteFileDimension(file: any) {
+  try {
+    if (file.id) {
+      form.value.removedFilesDimension = [...form.value.removedFilesDimension, file.id]
+      selectedFilesDimension.value = selectedFilesDimension.value.filter(selectedFile => (selectedFile?.id ?? 0) !== file.id)
+    } else {
+      selectedFilesDimension.value = selectedFilesDimension.value.filter(selectedFile => selectedFile !== file)
+      form.value.files = form.value.files.filter(formFile => formFile.file !== file)
+    }
+  } catch (error) {
+    console.log('Error while deleting file')
+    throw error
+  }
+}
+
 function isNumber (evt: KeyboardEvent): void {
   const keysAllowed: string[] = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.'];
   const keyPressed: string = evt.key;
@@ -308,6 +360,8 @@ function setImages(images: Array<any>, type: string = 'detail') {
     selectedFiles.value = images.map(image => ({ ...image, name: image.original_name }))
   } else if (type === 'header') {
     selectedFilesHeader.value = images.map(image => ({ ...image, name: image.original_name }))
+  } else if (type === 'dimension') {
+    selectedFilesDimension.value = images.map(image => ({ ...image, name: image.original_name }))
   }
 }
 
@@ -317,15 +371,19 @@ function generateOrderRequest(type: String = 'detail'): Array<any> {
     files = [...selectedFiles.value]
   } else if (type === 'header') {
     files = [...selectedFilesHeader.value]
+  } else if (type === 'dimension') {
+    files = [...selectedFilesDimension.value]
   }
   const result = files.reduce((pre, curr, currIndex) => {
     const newImage = !curr.id
     const order = currIndex + 1
-    let formFiles = []
+    let formFiles: Array<any> = []
     if (type === 'detail') {
       formFiles = [...form.value.files]
     } else if (type === 'header') {
       formFiles = [...form.value.filesHeader]
+    } else if (type === 'dimension') {
+      formFiles = [...form.value.filesDimension]
     }
     if (newImage) {
       pre.push({
@@ -489,6 +547,29 @@ function printUrl(file: any) {
                       <v-chip prepend-icon="mdi-file-image"> 
                         {{ $ellipsis(file.name, 20) }}
                         <v-icon icon="mdi-trash-can-outline" color="pink" style="margin-left: 5px;" @click="deleteFile(file)" />
+                      </v-chip>
+                      <div class="tooltip">
+                        <img v-if="file.link" :src="`${apiHost}${file.link}`" />
+                        <img v-else :src="printUrl(file)" />
+                      </div>
+                    </div>
+                  </VueDraggableNext>
+                </v-col>
+                <v-col md="12"><h3>Image Dimension</h3></v-col>
+                <v-col md="3" style="height: 40px;">
+                  <v-btn
+                    @click="clickFileDimension()"
+                  >
+                    Add Image
+                  </v-btn>
+                  <input ref="fileDimension" type="file" accept=".png,.jpg,.jpeg" multiple style="visibility: hidden;" @input="onFileInputDimension"/>
+                </v-col>
+                <v-col md="12" class="files">
+                  <VueDraggableNext :list="selectedFilesDimension">
+                    <div v-for="(file, i) in selectedFilesDimension" :index="i" class="chip-container">
+                      <v-chip prepend-icon="mdi-file-image"> 
+                        {{ $ellipsis(file.name, 20) }}
+                        <v-icon icon="mdi-trash-can-outline" color="pink" style="margin-left: 5px;" @click="deleteFileDimension(file)" />
                       </v-chip>
                       <div class="tooltip">
                         <img v-if="file.link" :src="`${apiHost}${file.link}`" />
